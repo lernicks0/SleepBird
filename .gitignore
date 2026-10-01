@@ -1,0 +1,10 @@
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+.DS_Store
+.validation/
+__pycache__/
+SleepBird-MVP.zip
+.ci-build/
+.ci-output/
