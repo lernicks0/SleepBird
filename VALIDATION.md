@@ -4,6 +4,8 @@
 
 2026-10-01 补充：加入 Windows 用户的手动 GitHub Actions 构建流程、可选模拟器 XCTest、未签名真机 IPA 打包脚本和 WINDOWS.md。已在本地检查 YAML、Python 语法和源码压缩包内容；**没有执行云端构建、签名或安装**。
 
+2026-10-01 云端验证：源码已上传到公开仓库 `lernicks0/SleepBird`。首次 [Actions 运行](https://github.com/lernicks0/SleepBird/actions/runs/36866917610) 使用 macOS 15.7.9 / Xcode 16.4，`xcodebuild test`、Release 真机 `xcodebuild build` 与 IPA 打包均返回成功。最后 artifact 上传因 `.ci-output` 属于隐藏目录而失败，已添加 `include-hidden-files: true` 修复并触发新运行。下面“尚未运行”的初始记录描述创建时的 Windows 状态；当前测试已在云端执行。真机安装、iPad 布局与真实通知交互仍需设备验证。
+
 ## 已执行
 
 运行 `scripts/check_project.py`，**48/48 项静态检查通过**：

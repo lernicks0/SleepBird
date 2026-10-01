@@ -47,4 +47,5 @@ jobs:
           name: SleepBird-iOS-${{ github.run_number }}
           path: .ci-output/
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 7

@@ -45,9 +45,13 @@ def main():
         run(base + ["-configuration", "Debug", "-destination", test_destination(),
                     "-derivedDataPath", str(BUILD / "tests"), "-resultBundlePath", str(OUTPUT / "SleepBirdTests.xcresult"),
                     "CODE_SIGNING_ALLOWED=NO", "test"], "tests.log")
-        (OUTPUT / "BUILD-INFO.txt").open("a", encoding="utf-8").write("XCTest command succeeded.\n")
+        print("XCTest succeeded. Last test log lines:", flush=True)
+        print("\n".join((OUTPUT / "tests.log").read_text(encoding="utf-8", errors="replace").splitlines()[-65:]), flush=True)
+        with (OUTPUT / "BUILD-INFO.txt").open("a", encoding="utf-8") as stream:
+            stream.write("XCTest command succeeded.\n")
     else:
-        (OUTPUT / "BUILD-INFO.txt").open("a", encoding="utf-8").write("XCTest skipped by workflow input.\n")
+        with (OUTPUT / "BUILD-INFO.txt").open("a", encoding="utf-8") as stream:
+            stream.write("XCTest skipped by workflow input.\n")
     run(base + ["-configuration", "Release", "-sdk", "iphoneos", "-destination", "generic/platform=iOS",
                 "-derivedDataPath", str(BUILD / "device"), "CODE_SIGNING_ALLOWED=NO",
                 "CODE_SIGNING_REQUIRED=NO", "CODE_SIGN_IDENTITY=", "build"], "build.log")
