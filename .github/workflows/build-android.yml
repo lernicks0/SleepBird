@@ -1,0 +1,62 @@
+name: Build and test Android APK
+
+on:
+  push:
+    branches: [main]
+    paths: ['android/**', '.github/workflows/build-android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sleepbird-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Unit tests, lint and APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Android 15 device tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            cd android && ./gradlew --no-daemon connectedDebugAndroidTest
+            mkdir -p .ci-output/android && adb pull /sdcard/Android/data/io.github.lernicks0.sleepbird.debug/files/screenshots .ci-output/android/
+      - name: Collect outputs
+        if: always()
+        run: |
+          mkdir -p .ci-output/android
+          cp android/app/build/outputs/apk/debug/app-debug.apk .ci-output/android/SleepBird-debug.apk || true
+      - name: Download APK and test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SleepBird-Android-${{ github.run_number }}
+          path: |
+            .ci-output/android/
+            android/app/build/reports/
+          include-hidden-files: true
+          retention-days: 14

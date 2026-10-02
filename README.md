@@ -4,6 +4,17 @@
 
 采用 [MIT 开源许可证](LICENSE)。
 
+## Android 版本 / 分享 APK
+
+新增原生 Kotlin Android 版本，支持 Android 8.0 及以上。朋友安装 APK 即可使用，不需要 Apple ID 或电脑签名，没有七天期限。
+保留随机催睡、跨午夜打卡、连续记录、通知快捷操作、历史、设置与调试功能。
+
+- [下载 Android 分享版](https://github.com/lernicks0/SleepBird/releases)
+- [Android 安装、构建与通知说明](android/README.md)
+- [Android 云端构建和测试](https://github.com/lernicks0/SleepBird/actions/workflows/build-android.yml)
+
+iOS / Android 的数据各自保存在设备本机，不自动同步。
+
 ## 在 Xcode 运行
 
 **没有 Mac、只有 Windows？** 查看 [Windows 云端构建与安装步骤](WINDOWS.md)。工程附带 GitHub Actions，源码推送到 main 后自动运行，也可手动触发：在云端 Mac 编译并生成未签名 IPA，再从 Windows 签名安装到自己的设备。
