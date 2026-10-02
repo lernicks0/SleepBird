@@ -75,3 +75,5 @@ CI 的 Debug APK 用于验证；长期给朋友使用请下载 Releases 中固�
 当前分享版的固定密钥和本地凭据保存在开发电脑项目的 `.validation/android-signing/`（已忽略）。请自行安全备份该目录；以后覆盖更新必须使用同一密钥并提高 `versionCode`，丢失密钥无法为已安装版本签名更新。
 
 项目使用 MIT 许可证，见仓库根目录 LICENSE。
+
+真实构建、测试结果与尚需实体手机检查的项目见 [VALIDATION.md](VALIDATION.md)。
