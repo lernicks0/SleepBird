@@ -47,7 +47,7 @@ jobs:
           disable-animations: true
           script: |
             cd android && ./gradlew --no-daemon connectedDebugAndroidTest
-            mkdir -p .ci-output/android && adb pull /sdcard/Android/data/io.github.lernicks0.sleepbird.debug/files/screenshots .ci-output/android/
+            bash android/capture-screenshots.sh
       - name: Collect outputs
         if: always()
         run: |
