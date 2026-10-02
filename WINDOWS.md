@@ -50,4 +50,4 @@
 
 ## 当前状态
 
-已提供 `.github/workflows/build-ios.yml` 和 `scripts/build_cloud.py`。本地检查只验证工作流配置、Python 语法及打包逻辑；实际云端构建、测试和 IPA 状态以 GitHub Actions 中具体运行的结果为准。`SleepBird-MVP.zip` 是源码包，里面不含已编译 App。
+云端构建已成功，19 个 XCTest 全部通过。[下载构建产物 SleepBird-iOS-2](https://github.com/lernicks0/SleepBird/actions/runs/36868051656/artifacts/11166675286)，解压后使用其中的 `SleepBird-unsigned.ipa` 签名安装。GitHub 登录后可下载 artifact；该产物按工作流设置保留 7 天。`SleepBird-MVP.zip` 是源码包，里面不含已编译 App。真机签名安装和通知交互仍需在你的设备上完成。

@@ -2,9 +2,13 @@
 
 创建日期：2026-09-30（Asia/Shanghai）。验证环境：Windows。本机没有 Xcode、Apple iOS SDK、Swift 编译器或模拟器。
 
-2026-10-01 补充：加入 Windows 用户的手动 GitHub Actions 构建流程、可选模拟器 XCTest、未签名真机 IPA 打包脚本和 WINDOWS.md。已在本地检查 YAML、Python 语法和源码压缩包内容；**没有执行云端构建、签名或安装**。
+2026-10-02 核验结果：GitHub 云端构建完整成功，**19 个 XCTest 全部通过，0 failures**，Release 真机编译、IPA 打包与 artifact 上传均成功。构建使用 macOS 15.7.9 / Xcode 16.4，测试日志提供每个测试用例的通过记录。
 
-2026-10-01 云端验证：源码已上传到公开仓库 `lernicks0/SleepBird`。首次 [Actions 运行](https://github.com/lernicks0/SleepBird/actions/runs/36866917610) 使用 macOS 15.7.9 / Xcode 16.4，`xcodebuild test`、Release 真机 `xcodebuild build` 与 IPA 打包均返回成功。最后 artifact 上传因 `.ci-output` 属于隐藏目录而失败，已添加 `include-hidden-files: true` 修复并触发新运行。下面“尚未运行”的初始记录描述创建时的 Windows 状态；当前测试已在云端执行。真机安装、iPad 布局与真实通知交互仍需设备验证。
+源码仓库：`lernicks0/SleepBird`。成功运行：[Actions #2](https://github.com/lernicks0/SleepBird/actions/runs/36868051656)。对应源码提交：`1e69c2b1ec21ca0f3eb304d08ef7f109d6883278`。下载产物：[SleepBird-iOS-2](https://github.com/lernicks0/SleepBird/actions/runs/36868051656/artifacts/11166675286)，其中包含 `SleepBird-unsigned.ipa`、`BUILD-INFO.txt`、`tests.log`、`build.log` 与 XCTest result bundle。首次运行的隐藏目录上传问题已修复。**真机安装、iPad 布局与真实通知交互仍需设备验证。**
+
+GitHub artifact SHA256：`c23e89f5bf86052850e2465a081dcdbc32e44d8b5178d4cbbd1a9ccdb05f002d`。这对应完整下载 ZIP，而非其中的 IPA。
+
+2026-10-02 已下载 artifact 到本机并验证 SHA256；ZIP 完整性检查通过。提取的 IPA SHA256 为 `3a5990d1665910affc82d508a1c8bbfc08dd9ea5115293c7ab9ce86d49e34335`。包中 `Payload/SleepBird.app` 含有效真机 Mach-O 可执行文件；Info.plist 的 Bundle ID 为 `com.example.SleepBird`，MinimumOSVersion 为 `18.0`，UIDeviceFamily 为 `[1, 2]`；包未签名，需安装工具签名后使用。编译日志明确显示 `BUILD SUCCEEDED`，测试日志明确显示 `Executed 19 tests, with 0 failures`。
 
 ## 已执行
 
@@ -26,18 +30,18 @@
 |---|---|---|
 | 普通提醒时间 | 非重复 calendar trigger；随机首条；随机最小间隔；`start <= fireDate < end` | 真机实际展示、专注模式影响 |
 | 权限 | 用户点击后请求 alert/sound/badge；拒绝后打开系统设置 | 第一次授权、拒绝、重新开启 |
-| 跨午夜 | SleepNight 在默认 04:00 切日；00:30 归前夜；日历加减天 | XCTest 与运行状态切日 |
+| 跨午夜 | SleepNight 在默认 04:00 切日；00:30 归前夜；日历加减天；相关 XCTest 已通过 | 真机运行状态切日 |
 | 通知取消 | 按 nightID 过滤 pending，包括当夜测试；先保存，再取消；未来夜保留 | 真机 pending 清空与并发操作 |
 | 快捷操作 | 启动时安装 delegate；后台 action；调用 completionHandler；旧夜不误打卡 | App 未运行时的冷启动操作 |
-| Streak | 按唯一夜日期连续计算；重复打卡无效；漏夜清零；最长值保留 | XCTest 执行 |
+| Streak | 按唯一夜日期连续计算；重复打卡无效；漏夜清零；最长值保留；相关 XCTest 已通过 | 真实用户连续使用 |
 | 持久化 | Codable/UserDefaults；数据损坏保护；时区变化重排未来计划 | 杀 App、重启、修改时区 |
 | iPad | device family 1,2；首页限宽；系统 List/Form；四方向 | 横竖屏、分屏、深色与大字体 |
 
-## 交付的 XCTest（尚未运行）
+## XCTest：19/19 已通过
 
 19 个用例包含：午夜归属、精确结束点、同日窗口、窗口有效性、自定义白天窗口等级递增、默认等级边界、强度限制、300 轮随机计划约束、75 条文案、相邻夜首条偏移差异、计划刷新稳定性、幂等打卡、连续与漏夜、跨年与闰日、设置修改保留完成、UserDefaults 恢复、损坏数据保护、夏令时、通知 action 注册。
 
-必须在 Mac/Xcode 中运行 **⌘U**。随机计划用例检查不变量，不依赖某个随机样本“碰巧不同”；相邻夜偏移差异由生成算法强制保证。
+这些用例已在云端 iPhone 模拟器运行通过；后续修改可用 CI 或 Mac/Xcode **⌘U** 重跑。随机计划用例检查不变量，不依赖某个随机样本“碰巧不同”；相邻夜偏移差异由生成算法强制保证。
 
 ## Mac / 真机验收步骤
 

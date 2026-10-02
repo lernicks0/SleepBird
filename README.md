@@ -124,6 +124,6 @@ VALIDATION.md                 验证记录和真机验收清单
 
 ## 当前验证状态
 
-创建环境为 **Windows，没有本机 Xcode / iOS SDK / Swift 编译器**。本地执行了工程结构、Swift 语法解析、资源/XML/隐私声明与源码逻辑静态检查。2026-10-01 已通过 GitHub 云端 Mac 的 **Xcode 16.4 构建、模拟器 XCTest 命令与真机 IPA 打包**；首次运行的最后产物上传步骤失败，已修正隐藏目录上传配置。实际可下载产物以 [GitHub Actions](https://github.com/lernicks0/SleepBird/actions) 中成功运行结果为准。**尚未执行真实 iPhone/iPad 的安装、UI 和通知交互验收**。详细结果见 [VALIDATION.md](VALIDATION.md)。
+创建环境为 **Windows，没有本机 Xcode / iOS SDK / Swift 编译器**。本地执行了 48 项静态检查。已在 GitHub 云端 Mac 的 **Xcode 16.4** 完成构建，**19 个 XCTest 全部通过（0 failures）**，Release 真机 IPA 打包与产物上传均成功。可从 [成功构建的下载页面](https://github.com/lernicks0/SleepBird/actions/runs/36868051656/artifacts/11166675286) 下载未签名 IPA 与完整测试日志。**尚未执行真实 iPhone/iPad 的安装、UI 和通知交互验收**。详细结果见 [VALIDATION.md](VALIDATION.md)。
 
 官方参考：[本地通知的安排和处理](https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/SchedulingandHandlingLocalNotifications.html)、[通知操作处理](https://developer.apple.com/documentation/usernotifications/handling-notifications-and-notification-related-actions)、[通知 Action](https://developer.apple.com/documentation/usernotifications/unnotificationaction)、[UserDefaults required-reason API](https://developer.apple.com/documentation/bundleresources/describing-use-of-required-reason-api)。
