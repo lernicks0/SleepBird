@@ -19,6 +19,9 @@ class SleepStore(context: Context) {
     var lastMessage: String? = null
     var nextAlarm: PlannedReminder? = null
     var timeZone = ZoneId.systemDefault().id
+    var monitorSession: MonitorSession? = null
+    var monitorIssue: String? = null
+    var messageVersion = 0
     var error: String? = null
         private set
 
@@ -28,7 +31,7 @@ class SleepStore(context: Context) {
                 val state = JSONObject(raw)
                 val s = state.getJSONObject("settings")
                 val loaded = AppSettings(s.getInt("start"), s.getInt("end"), s.getInt("intensity"),
-                    s.getInt("frequency"), s.getBoolean("sound"), s.getBoolean("vibration"))
+                    s.getInt("frequency"), s.getBoolean("sound"), s.getBoolean("vibration"), s.optBoolean("monitorUsage", false))
                 require(loaded.isValid)
                 val r = state.getJSONArray("records").objects().map {
                     val id = it.getString("night")
@@ -51,6 +54,11 @@ class SleepStore(context: Context) {
                 lastDelivered = state.optLong("lastDelivered")
                 lastMessage = if (state.isNull("lastMessage")) null else state.optString("lastMessage")
                 nextAlarm = state.optJSONObject("next")?.let(::readReminder)
+                monitorSession = state.optJSONObject("monitor")?.let {
+                    MonitorSession(it.getString("night"), it.getLong("completedAt"), it.getLong("armedAt"), it.getLong("endsAt"))
+                }
+                monitorIssue = if (state.isNull("monitorIssue")) null else state.optString("monitorIssue").takeIf { it.isNotEmpty() }
+                messageVersion = state.optInt("messageVersion", 0)
             }
         } catch (_: Exception) {
             error = "本机数据无法读取，原始数据已保留。请在调试页重置本机数据。"
@@ -66,6 +74,7 @@ class SleepStore(context: Context) {
 
     fun refresh(now: Long) {
         if (error != null) return
+        if (messageVersion != 2) { plans.clear(); messageVersion = 2 }
         val zone = ZoneId.systemDefault().id
         if (timeZone != zone) { plans.clear(); timeZone = zone; lastDelivered = 0 }
         val night = SleepNight.current(now, settings)
@@ -87,13 +96,17 @@ class SleepStore(context: Context) {
         if (error != null) return false
         val s = settings
         val value = JSONObject().put("settings", JSONObject().put("start", s.startMinute).put("end", s.endMinute)
-            .put("intensity", s.intensity).put("frequency", s.frequency).put("sound", s.sound).put("vibration", s.vibration))
+            .put("intensity", s.intensity).put("frequency", s.frequency).put("sound", s.sound).put("vibration", s.vibration)
+            .put("monitorUsage", s.monitorUsage))
             .put("records", JSONArray(records.map { JSONObject().put("night", it.nightId).put("at", it.completedAt) }))
             .put("plans", JSONArray(plans.map { JSONObject().put("night", it.nightId).put("items", JSONArray(it.reminders.map(::writeReminder))) }))
             .put("tests", JSONArray(tests.map { JSONObject().put("id", it.id).put("night", it.nightId).put("time", it.time) }))
             .put("delivered", JSONObject(delivered.toMap())).put("longest", longest).put("zone", timeZone)
             .put("lastDelivered", lastDelivered).put("lastMessage", lastMessage ?: JSONObject.NULL)
             .put("next", nextAlarm?.let(::writeReminder) ?: JSONObject.NULL)
+            .put("monitor", monitorSession?.let { JSONObject().put("night", it.nightId).put("completedAt", it.completedAt)
+                .put("armedAt", it.armedAt).put("endsAt", it.endsAt) } ?: JSONObject.NULL)
+            .put("monitorIssue", monitorIssue ?: JSONObject.NULL).put("messageVersion", messageVersion)
         if (!prefs.edit().putString("state.v1", value.toString()).commit()) {
             error = "本机数据保存失败。请检查设备存储空间后重试。"
             return false
@@ -102,6 +115,18 @@ class SleepStore(context: Context) {
     }
 
     fun reset() { prefs.edit().clear().commit() }
+
+    fun revokeSleep(session: MonitorSession, now: Long): Boolean {
+        if (error != null || monitorSession != session || now >= session.endsAt ||
+            SleepNight.current(now, settings).id != session.nightId) return false
+        // Timestamp check prevents a delayed result from undoing a newer check-in.
+        val record = records.firstOrNull { it.nightId == session.nightId && it.completedAt == session.completedAt } ?: return false
+        records.remove(record)
+        longest = Streak.longest(records)
+        monitorSession = null
+        monitorIssue = null
+        return save()
+    }
 
     private fun readReminder(o: JSONObject) = PlannedReminder(o.getString("id"), o.getString("night"),
         o.getLong("time"), o.getInt("level"), o.getString("message"))

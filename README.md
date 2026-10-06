@@ -15,6 +15,8 @@
 
 iOS / Android 的数据各自保存在设备本机，不自动同步。
 
+Android 1.1.0 新增可选“入睡后使用追踪”：主动授权使用情况访问后，打卡 30 秒后若前台使用其他 App，会撤销对应夜的打卡并重新催睡；75 条提醒文案也更有冲劲。仅在本机判断，有可关闭的持续通知。具体权限、限制和安装方法见 [Android 说明](android/README.md)。此功能目前未加入 iOS 版。
+
 ## 在 Xcode 运行
 
 **没有 Mac、只有 Windows？** 查看 [Windows 云端构建与安装步骤](WINDOWS.md)。工程附带 GitHub Actions，源码推送到 main 后自动运行，也可手动触发：在云端 Mac 编译并生成未签名 IPA，再从 Windows 签名安装到自己的设备。

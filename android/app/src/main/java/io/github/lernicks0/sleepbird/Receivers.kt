@@ -5,7 +5,10 @@ import android.content.Context
 import android.content.Intent
 
 class ReminderReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) { NotificationEngine.receive(context, intent) }
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.getBooleanExtra("monitorEnd", false)) UsageMonitor.sync(context)
+        else NotificationEngine.receive(context, intent)
+    }
 }
 
 class SleepActionReceiver : BroadcastReceiver() {
@@ -20,5 +23,6 @@ class RestoreReceiver : BroadcastReceiver() {
         val store = SleepStore(context)
         if (intent.action == Intent.ACTION_TIME_CHANGED) store.lastDelivered = 0
         NotificationEngine.reconcile(context, store)
+        UsageMonitor.sync(context, allowStart = true)
     }
 }

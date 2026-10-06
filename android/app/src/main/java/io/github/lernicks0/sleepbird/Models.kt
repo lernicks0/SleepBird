@@ -11,7 +11,8 @@ data class AppSettings(
     val intensity: Int = 0,
     val frequency: Int = 1,
     val sound: Boolean = true,
-    val vibration: Boolean = true
+    val vibration: Boolean = true,
+    val monitorUsage: Boolean = false
 ) {
     val durationMinutes: Int get() = (endMinute - startMinute + 1440) % 1440
     val isValid: Boolean get() = startMinute in 0..1439 && endMinute in 0..1439 &&
@@ -46,6 +47,24 @@ data class SleepRecord(val nightId: String, val completedAt: Long)
 data class PlannedReminder(val id: String, val nightId: String, val time: Long, val level: Int, val message: String)
 data class NightPlan(val nightId: String, val reminders: List<PlannedReminder>)
 data class TestReminder(val id: String, val nightId: String, val time: Long)
+data class MonitorSession(val nightId: String, val completedAt: Long, val armedAt: Long, val endsAt: Long)
+data class AppActivity(val packageName: String, val time: Long, val resumed: Boolean)
+
+/** Screen/lock state and excluded packages are provided by the Android adapter. */
+object UsagePolicy {
+    const val GRACE_MS = 30_000L
+    fun isViolation(events: List<AppActivity>, session: MonitorSession, now: Long,
+                    interactive: Boolean, locked: Boolean, ignored: Set<String>): Boolean {
+        if (!interactive || locked || now < session.armedAt + GRACE_MS || now >= session.endsAt || now < session.armedAt) return false
+        val gate = session.armedAt + GRACE_MS
+        val ordered = events.filter { it.time <= now }.sortedBy { it.time }
+        // A real foreground launch after the grace period counts even if already closed.
+        if (ordered.any { it.resumed && it.time >= gate && it.packageName !in ignored }) return true
+        // Also catch staying in another app after a notification-action check-in.
+        val last = ordered.lastOrNull() ?: return false
+        return last.resumed && last.packageName !in ignored
+    }
+}
 
 object ReminderScheduler {
     fun levelAt(time: Long, night: SleepNight, settings: AppSettings, zone: ZoneId = ZoneId.systemDefault()): Int {

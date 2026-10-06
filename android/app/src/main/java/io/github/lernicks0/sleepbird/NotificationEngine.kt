@@ -40,6 +40,7 @@ object NotificationEngine {
     }
 
     fun cancelAll(context: Context, store: SleepStore) {
+        UsageMonitor.stop(context)
         alarms(context).cancel(alarmIntent(context))
         store.tests.forEach { alarms(context).cancel(alarmIntent(context, it.id)) }
         notifications(context).cancelAll()
@@ -60,6 +61,7 @@ object NotificationEngine {
         if (!store.save()) return
         next?.let { arm(context, it.time, alarmIntent(context, reminder = it)) }
         if (allowed(context)) store.tests.filter { it.time > now }.forEach { arm(context, it.time, alarmIntent(context, it.id)) }
+        UsageMonitor.sync(context, now = now)
     }
 
     fun complete(context: Context, target: String, now: Long = System.currentTimeMillis()): Boolean {
@@ -71,6 +73,7 @@ object NotificationEngine {
         store.tests.filter { it.nightId == target }.forEach { alarms(context).cancel(alarmIntent(context, it.id)) }
         store.tests.removeAll { it.nightId == target }
         reconcile(context, store, now)
+        UsageMonitor.sync(context, allowStart = true, now = now)
         return completed
     }
 
@@ -121,6 +124,10 @@ object NotificationEngine {
         reconcile(context, store, now)
     }
 
+    fun postRelapse(context: Context, settings: AppSettings, night: String) {
+        post(context, settings, night, NotificationMessageProvider.relapse.random(), false)
+    }
+
     private fun post(context: Context, settings: AppSettings, night: String, message: String, test: Boolean): Boolean {
         if (!allowed(context)) return false
         val manager = notifications(context)
@@ -138,7 +145,7 @@ object NotificationEngine {
             .setData(Uri.parse("sleepbird://complete/$night")).putExtra("night", night),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val notification = Notification.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_bird).setContentTitle(if (test) "SleepBird · 测试" else "SleepBird · 该休息啦")
+            .setSmallIcon(R.drawable.ic_bird).setContentTitle(if (test) "SleepBird · 测试" else "SleepBird · 晚安冲刺！🐦")
             .setContentText(message).setStyle(Notification.BigTextStyle().bigText(message))
             .setContentIntent(open).setAutoCancel(true).setCategory(Notification.CATEGORY_REMINDER)
             .setVisibility(Notification.VISIBILITY_PRIVATE)

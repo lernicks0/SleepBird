@@ -56,6 +56,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         NotificationEngine.reconcile(this)
+        UsageMonitor.sync(this, allowStart = true)
         render()
         handler.removeCallbacks(refresh)
         handler.postDelayed(refresh, 30_000)
@@ -145,6 +146,18 @@ class MainActivity : Activity() {
             if (ok) toast("晚安，明天见 🌙") else toast("状态已变化，请查看今晚记录")
             render()
         }
+        if (store.settings.monitorUsage) {
+            val status = when {
+                !UsageMonitor.authorized(this) -> "追踪未开启：请授权使用情况访问"
+                !NotificationEngine.allowed(this) -> "追踪未开启：请允许通知"
+                store.monitorIssue != null -> store.monitorIssue!!
+                !done -> "下次打卡后开始使用追踪"
+                !UsageMonitor.running -> "追踪正在启动；持续通知出现后生效"
+                now < (store.monitorSession?.armedAt ?: now) + UsagePolicy.GRACE_MS -> "30 秒锁屏准备中 💤"
+                else -> "本地追踪中：再用其他 App 会撤销今晚打卡"
+            }
+            text(status, 13f, muted, center = true)
+        }
         card {
             addText(this, "下一次提醒", 13f, muted)
             val next = store.nextAlarm?.takeIf { it.nightId == night.id }
@@ -203,6 +216,21 @@ class MainActivity : Activity() {
         toggle("通知振动", store.settings.vibration) { updateSettings(store.settings.copy(vibration = it)) }
         text("声音和振动还会受系统通知设置、静音和勿扰模式影响。", 13f, muted)
         space(12)
+        text("入睡后使用追踪", 17f, bold = true)
+        toggle("打卡后检查其他 App 活动", store.settings.monitorUsage) { enabled ->
+            if (!enabled) updateSettings(SleepStore(this).settings.copy(monitorUsage = false))
+            else AlertDialog.Builder(this).setTitle("开启入睡后使用追踪？")
+                .setMessage("需要你在系统设置中主动允许「使用情况访问」。打卡后留 30 秒锁屏；此后到提醒截止时间，若前台使用其他 App，会撤销这一晚的打卡、重算连续记录并提醒你。\n\n不把后台音乐、消息到达、桌面、锁屏或 SleepBird 本身算作违规。只在本机临时读取活动事件，不保存 App 名称或上传。追踪时会有持续通知，可以随时关闭。系统强行停止或省电限制可能中断追踪。")
+                .setNegativeButton("取消") { _, _ -> render() }
+                .setOnCancelListener { render() }
+                .setPositiveButton("同意并开启") { _, _ ->
+                    updateSettings(SleepStore(this).settings.copy(monitorUsage = true))
+                    if (!UsageMonitor.authorized(this)) openUsageSettings()
+                }.show()
+        }
+        text("使用情况访问：${if (UsageMonitor.authorized(this)) "已允许" else "未允许"} · 仅检测前台活动，不检测真实入睡。", 13f, muted)
+        button("管理使用情况访问权限") { openUsageSettings() }
+        space(12)
         text("系统权限", 17f, bold = true)
         button(if (NotificationEngine.allowed(this)) "通知已开启 · 管理通知" else "开启通知") {
             if (NotificationEngine.allowed(this)) openNotificationSettings() else requestNotifications()
@@ -215,7 +243,7 @@ class MainActivity : Activity() {
         space(12)
         button("Developer / Debug Mode") { page = "debug"; render() }
         card {
-            addText(this, "SleepBird 1.0.0 · Android", 16f, ink, true)
+            addText(this, "SleepBird 1.1.0 · Android", 16f, ink, true)
             addText(this, "完全本地 · 无账号 · 无广告 · MIT 开源", 13f, muted)
             addText(this, "把 APK 发给朋友，一起早点收工。", 14f, muted)
         }
@@ -265,6 +293,9 @@ class MainActivity : Activity() {
         store.nextAlarm?.let { text("催睡：${dateTime(it.time)} · ${it.nightId}", 14f) } ?: text("没有已登记的普通提醒", 14f, muted)
         store.tests.forEach { text("${it.id}：${dateTime(it.time)}", 14f) }
         text("准时提醒：${NotificationEngine.exactAllowed(this)}\n通知权限：${NotificationEngine.allowed(this)}", 13f, muted)
+        text("使用情况访问：${UsageMonitor.authorized(this)}\n追踪开关：${store.settings.monitorUsage}\n追踪服务：${UsageMonitor.running}", 13f, muted)
+        store.monitorSession?.let { text("追踪夜：${it.nightId}\n生效：${dateTime(it.armedAt + UsagePolicy.GRACE_MS)}\n截止：${dateTime(it.endsAt)}", 13f, muted) }
+        store.monitorIssue?.let { text(it, 13f, muted) }
     }
 
     private fun updateSettings(value: AppSettings) {
@@ -272,7 +303,9 @@ class MainActivity : Activity() {
         val fresh = SleepStore(this)
         NotificationEngine.cancelAll(this, fresh)
         fresh.settings = value; fresh.plans.clear(); fresh.tests.clear()
+        fresh.monitorSession = null; fresh.monitorIssue = null
         NotificationEngine.reconcile(this, fresh)
+        UsageMonitor.sync(this, allowStart = true)
         render()
     }
     private fun timePicker(store: SleepStore, start: Boolean) {
@@ -289,6 +322,10 @@ class MainActivity : Activity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         NotificationEngine.reconcile(this); render()
+    }
+    private fun openUsageSettings() {
+        try { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:$packageName"))) }
+        catch (_: android.content.ActivityNotFoundException) { openSettings(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
     }
     private fun openNotificationSettings() {
         openSettings(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, packageName))
