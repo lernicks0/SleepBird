@@ -15,7 +15,11 @@
 
 iOS / Android 的数据各自保存在设备本机，不自动同步。
 
-Android 1.1.0 新增可选“入睡后使用追踪”：主动授权使用情况访问后，打卡 30 秒后若前台使用其他 App，会撤销对应夜的打卡并重新催睡；75 条提醒文案也更有冲劲。仅在本机判断，有可关闭的持续通知。具体权限、限制和安装方法见 [Android 说明](android/README.md)。此功能目前未加入 iOS 版。
+Android 1.1.0 新增可选“入睡后使用追踪”：主动授权使用情况访问后，打卡 30 秒后若前台使用其他 App，会撤销对应夜的打卡并重新催睡；75 条提醒文案也更有冲劲。仅在本机判断，有可关闭的持续通知。具体权限、限制和安装方法见 [Android 说明](android/README.md)。
+
+iOS 1.1.0 已同步 75 条加强版文案和通知标题；升级保留提醒时间、打卡记录和 streak。**不包含跨 App 使用追踪**，也不请求广告追踪权限。普通 App 的 App Tracking Transparency 授权不提供其他 App 的使用事件。
+
+iOS 官方可行路径是 Family Controls + DeviceActivity：设备主人授权屏幕使用时间，再按前台使用时长阈值由监测扩展处理。该能力需要 Apple Developer Program 的签名配置，免费 Personal Team 不能使用；公开分发还需苹果批准 Family Controls entitlement，主 App 与相关扩展都要配置。阈值回调与系统调度不能承诺“打开任意 App 即刻撤销”。本项目目前未添加这些受限 entitlement，以保留当前免费签名安装方式。[苹果能力表](https://developer.apple.com/help/account/reference/supported-capabilities-ios/)、[Family Controls 配置](https://developer.apple.com/documentation/Xcode/configuring-family-controls)、[DeviceActivityEvent](https://developer.apple.com/documentation/deviceactivity/deviceactivityevent)。
 
 ## 在 Xcode 运行
 

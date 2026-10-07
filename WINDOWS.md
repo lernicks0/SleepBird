@@ -50,4 +50,6 @@
 
 ## 当前状态
 
-云端构建已成功，19 个 XCTest 全部通过。[下载构建产物 SleepBird-iOS-2](https://github.com/lernicks0/SleepBird/actions/runs/36868051656/artifacts/11166675286)，解压后使用其中的 `SleepBird-unsigned.ipa` 签名安装。GitHub 登录后可下载 artifact；该产物按工作流设置保留 7 天。`SleepBird-MVP.zip` 是源码包，里面不含已编译 App。真机签名安装和通知交互仍需在你的设备上完成。
+2026-10-07：iOS/iPadOS 1.1.0 云端构建成功，20 个 XCTest 全部通过。[下载 1.1.0 未签名 IPA](https://github.com/lernicks0/SleepBird/releases/download/ios-v1.1.0/SleepBird-iOS-1.1.0-unsigned.ipa)，通过 Sideloadly 以原 Apple ID、原 App 标识签名覆盖安装。不要先卸载，以保留记录。[本次构建与测试](https://github.com/lernicks0/SleepBird/actions/runs/37577906813)。
+
+本版同步更有冲劲的 75 条催睡文案，保留已有提醒时间、打卡记录和 streak。**不包含 Android 版的入睡后跨 App 使用追踪**。该功能的 iOS 官方路径需要 Family Controls + DeviceActivity 和支持该能力的开发者签名，免费 Personal Team 不支持。[苹果能力表](https://developer.apple.com/help/account/reference/supported-capabilities-ios/)。本次未在实体设备验证更新安装或通知展示。

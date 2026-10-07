@@ -1,5 +1,19 @@
 # 验证记录
 
+## iOS / iPadOS 1.1.0（2026-10-07）
+
+- [实际成功的 GitHub macOS 构建](https://github.com/lernicks0/SleepBird/actions/runs/37577906813)，源码 `2521c6660a7adad4541b0b34df342d76f0f810c6`；Xcode 16.4。**20 个 XCTest 全部通过，0 failures**，包含升级文案时保留计划时间、ID 和打卡记录的新增测试。
+- Release 真机 arm64 编译、未签名 IPA 打包与附件上传成功；下载后核对 artifact SHA256 和 ZIP 完整性，并检查 `BUILD SUCCEEDED` 与实际测试日志。
+- 新 IPA 324,709 bytes，版本 1.1.0、build 2，Bundle ID 仍为 `com.example.SleepBird`，最低 iOS/iPadOS 18，device family `[1, 2]`。Mach-O arm64 文件有效，无签名或内嵌 provisioning profile，仍需用户通过原 Apple ID 和原 App 标识签名安装。
+- 本机仍为 Windows，只执行了 48/48 结构和语法静态检查；实际 Xcode 编译和 XCTest 来自上述云端运行。本次未在实体 iPad/iPhone 安装或验证通知展示。
+- 此更新同步 75 条加强版通知文案和标题，不包含跨 App 使用追踪，也不包含 Family Controls entitlement 或广告追踪权限。苹果能力表确认免费 Personal Team 不支持 Family Controls；相关签名能力、监测扩展与系统授权尚未实现或测试。
+
+Artifact SHA256：`54f4551bb8f7453295087d837bad6ee59ac3ddc87a3b78f097b5b09bfb397c45`。
+
+IPA SHA256：`44421343764faf28e4f1927833e2344d62bc47482c61f19353116fa9308ea48f`。
+
+以下是 1.0 版本的历史验证记录。
+
 创建日期：2026-09-30（Asia/Shanghai）。验证环境：Windows。本机没有 Xcode、Apple iOS SDK、Swift 编译器或模拟器。
 
 2026-10-02 核验结果：GitHub 云端构建完整成功，**19 个 XCTest 全部通过，0 failures**，Release 真机编译、IPA 打包与 artifact 上传均成功。构建使用 macOS 15.7.9 / Xcode 16.4，测试日志提供每个测试用例的通过记录。
