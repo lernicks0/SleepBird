@@ -1,4 +1,25 @@
-# Android MVP 验证
+# Android 验证
+
+## 1.1.0 使用追踪更新
+
+验证日期：2026-10-06，发布整理：2026-10-07。
+
+- Windows 实际执行 `assembleRelease lintRelease assembleDebug assembleDebugAndroidTest` 成功；Release Lint 0 errors、7 个非阻塞 warning。
+- 分享 APK 676,177 bytes，包名 `io.github.lernicks0.sleepbird`，versionCode 2、versionName 1.1.0，minSdk 26、targetSdk 35。`apksigner` 验证 v2 签名通过，签名证书与 1.0.0 一致，可覆盖更新；私钥未上传。
+- `aapt dump badging` 确认新增 PACKAGE_USAGE_STATS、FOREGROUND_SERVICE、FOREGROUND_SERVICE_SPECIAL_USE，仍无 INTERNET 权限。使用情况访问需要用户主动在系统设置中授权；默认开关为关闭。
+- [GitHub Actions 实际成功运行](https://github.com/lernicks0/SleepBird/actions/runs/37484792395)：**24 项 JVM 单元测试，0 失败、0 忽略；9 项 Android 15 设备测试，0 失败、0 跳过**。报告已经下载并核对。
+- 新增单元测试覆盖 30 秒准备时间、亮屏/锁屏、排除自身/桌面/系统界面/键盘、准备时间前关闭其他 App、准备时间后打开再关闭、通知打卡后仍留在其他 App、空/后台事件、截止时刻、时钟回退、未来事件和 streak 回退。
+- 在临时 Android 15 模拟器中实际授予 Debug 包名使用情况访问、启动可见前台服务、打开 Android 设置产生真实前台活动事件，验证记录撤销、追踪停止、新通知出现、最长 streak 回退和重新登记催睡闹钟。测试只为缩短耗时将准备时间起点调整到 31 秒前；30 秒边界由单元测试验证。
+- 设备测试还验证缺少使用权限时保留打卡、不开始追踪，旧版 JSON 升级保留记录且不自动开启追踪，过期监测结果不能撤销较新的打卡。原通知快捷操作和重启恢复测试仍通过。
+- 已查看本次模拟器手机浅色和平板深色截图，布局正常。
+
+APK SHA256：`e5b105d239c92389191aa4437a6a2c623172241f63d77e710d72045d8441caca`
+
+签名证书 SHA256：`f8c28c3751a0a79280df2eb9517507578806825ac27894cd27285e42aa493fdf`
+
+尚无实体 Android 手机验证。厂商省电、真实长期锁屏、分屏、特殊系统界面及不同版本的使用事件延迟仍需手机试用。实际外部 App 检测使用 Android 设置产生前台事件；未声称已对所有第三方 App 实测。通知操作的基础打卡测试真实执行 PendingIntent；授权后的追踪服务从可见 Activity 启动测试，尚未单独实测锁屏通知打卡启动服务。iOS 版本未增加此功能。
+
+## 1.0.0 MVP 验证记录
 
 验证日期：2026-10-02。
 
