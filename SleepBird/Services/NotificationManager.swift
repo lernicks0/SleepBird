@@ -94,7 +94,7 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
                     guard !tracker.completed(reminder.nightID), reminder.fireDate > Date() else { continue }
                     guard tracker.plans.contains(where: { $0.reminders.contains(where: { $0.id == reminder.id }) }) else { continue }
                     let content = UNMutableNotificationContent()
-                    content.title = "SleepBird · 催睡等级 \(reminder.level.rawValue)"
+                    content.title = "SleepBird · 晚安冲刺！🐦 LEVEL \(reminder.level.rawValue)"
                     content.body = reminder.message
                     content.categoryIdentifier = Self.categoryID
                     content.threadIdentifier = reminder.nightID

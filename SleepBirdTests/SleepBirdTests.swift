@@ -203,6 +203,35 @@ final class SleepBirdTests: XCTestCase {
         XCTAssertEqual(restored.latestCompletion?.nightID, "2026-10-01")
         XCTAssertEqual(original.plans.flatMap(\.reminders).map(\.id), restored.plans.flatMap(\.reminders).map(\.id))
     }
+    func testMessageUpgradePreservesScheduleAndCompletion() throws {
+        let name = "SleepBird.tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        let original = SleepTracker(defaults: defaults, calendar: calendar)
+        original.refresh(at: date("2026-10-01T21:00:00"))
+        original.complete(at: date("2026-10-01T21:05:00"))
+        let ids = original.plans.flatMap(\.reminders).map(\.id)
+        let times = original.plans.flatMap(\.reminders).map(\.fireDate)
+        var state = try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(defaults.data(forKey: "SleepBird.state.v1"))) as? [String: Any])
+        var plans = try XCTUnwrap(state["plans"] as? [[String: Any]])
+        for index in plans.indices {
+            var reminders = try XCTUnwrap(plans[index]["reminders"] as? [[String: Any]])
+            for item in reminders.indices { reminders[item]["message"] = "旧版文案" }
+            plans[index]["reminders"] = reminders
+        }
+        state["plans"] = plans
+        defaults.set(try JSONSerialization.data(withJSONObject: state), forKey: "SleepBird.state.v1")
+        defaults.removeObject(forKey: "SleepBird.messageVersion")
+        let restored = SleepTracker(defaults: defaults, calendar: calendar)
+        restored.refresh(at: date("2026-10-01T21:06:00"))
+        XCTAssertEqual(ids, restored.plans.flatMap(\.reminders).map(\.id))
+        XCTAssertEqual(times, restored.plans.flatMap(\.reminders).map(\.fireDate))
+        XCTAssertTrue(restored.plans.flatMap(\.reminders).allSatisfy {
+            NotificationMessageProvider.messages[$0.level]!.contains($0.message)
+        })
+        XCTAssertTrue(restored.isComplete)
+        XCTAssertEqual(restored.currentStreak, 1)
+    }
     func testCorruptDataIsNotSilentlyOverwritten() {
         let name = "SleepBird.tests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: name)!

@@ -96,6 +96,22 @@ final class SleepTracker: ObservableObject {
     func refresh(at date: Date = Date()) {
         now = date
         guard storageError == nil else { return }
+        if defaults.integer(forKey: "SleepBird.messageVersion") != 2 {
+            // Upgrade copy while keeping the already-randomized times and record dates.
+            plans = plans.map { plan in
+                var previous: String?
+                let reminders = plan.reminders.map { reminder in
+                    let message = NotificationMessageProvider.message(for: reminder.level, excluding: previous)
+                    previous = message
+                    return PlannedReminder(id: reminder.id, nightID: reminder.nightID,
+                                           fireDate: reminder.fireDate, level: reminder.level, message: message)
+                }
+                return NightPlan(nightID: plan.nightID, logicalDate: plan.logicalDate, reminders: reminders)
+            }
+            save()
+            guard storageError == nil else { return }
+            defaults.set(2, forKey: "SleepBird.messageVersion")
+        }
         if followsSystemTimeZone { calendar = SleepNight.calendar }
         if schedulingTimeZone != calendar.timeZone.identifier {
             plans.removeAll()

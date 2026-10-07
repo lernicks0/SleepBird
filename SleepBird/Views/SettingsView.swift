@@ -73,7 +73,7 @@ struct SettingsView: View {
                 NavigationLink("Developer / Debug Mode") { DebugView() }
             }
             Section("关于") {
-                Text("SleepBird · 本地 MVP").font(.headline)
+                Text("SleepBird 1.1.0 · 本地 MVP").font(.headline)
                 Text("无需服务器、账号或付费 API。打卡用于记录习惯，不判断你是否真正入睡。")
                 Text("未来提醒按系统队列容量预排。长期不打开 App 时，预排耗尽后停止提醒；打开 App 或点击通知操作会补充计划。")
                     .font(.caption).foregroundStyle(.secondary)
